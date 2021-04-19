@@ -44,8 +44,10 @@ from .OMBManagerLocale import _
 from enigma import eTimer
 
 import os
-from subprocess import getoutput
-
+try:
+    from subprocess import getoutput
+except ImportError:
+    from commands import getoutput
 
 class OMBManagerList(Screen):
 	skin = """
@@ -194,16 +196,17 @@ class OMBManagerList(Screen):
 			"menu": self.showMen,
 		})
 
+
 	def isCompatible(self, base_path):
 		running_box_type = "none"
 		e2_path = '/usr/lib/enigma2/python'
-		if os.path.exists(e2_path + '/boxbranding.so'):
+		if os.path.exists(e2_path + '/boxbranding.so') or os.path.exists(e2_path + '/Plugins/PLi/__init__.pyo'):
 			helper = os.path.dirname("/usr/bin/python3 " + os.path.abspath(__file__)) + "/open-multiboot-branding-helper.py"
 			fout = getoutput(helper + " " + e2_path + " box_type")
 			running_box_type = fout.strip()
 
 		e2_path = base_path + '/usr/lib/enigma2/python'
-		if os.path.exists(e2_path + '/boxbranding.so'):
+		if os.path.exists(e2_path + '/boxbranding.so') or os.path.exists(e2_path + '/Plugins/PLi/__init__.pyo'):
 			helper = os.path.dirname("/usr/bin/python3 " + os.path.abspath(__file__)) + "/open-multiboot-branding-helper.py"
 			fout = getoutput(helper + " " + e2_path + " brand_oem")
 			brand_oem = fout.strip()
@@ -262,6 +265,7 @@ class OMBManagerList(Screen):
 		self.images_list = []
 		self.images_entries = []
 		flashimageLabel = 'Flash image'
+
 
 		self["label2"].setText(self.currentImage())
 
@@ -339,6 +343,7 @@ class OMBManagerList(Screen):
 		name = self["list"].getCurrent()
 		self.session.openWithCallback(self.confirmNextbootCB, MessageBox, _('Set next boot to %s ?') % name, MessageBox.TYPE_YESNO)
 
+
 	def confirmNextbootCB(self, ret):
 		if ret:
 			image = self.images_entries[self.select]['identifier']
@@ -390,7 +395,7 @@ class OMBManagerList(Screen):
 
 	def deleteConfirm(self, confirmed):
 		if confirmed and len(self.entry_to_delete['path']) > 1:
-			self.messagebox = self.session.open(MessageBox, _('Please wait while delete is in progress.'), MessageBox.TYPE_INFO, enable_input=False)
+			self.messagebox = self.session.open(MessageBox, _('Please wait while delete is in progress.'), MessageBox.TYPE_INFO, enable_input = False)
 			self.timer = eTimer()
 			self.timer.callback.append(self.deleteImage)
 			self.timer.start(100)
@@ -431,7 +436,7 @@ class OMBManagerList(Screen):
 			self.session.open(
 				MessageBox,
 				_("Please upload an image inside %s") % self.upload_dir,
-				type=MessageBox.TYPE_ERROR
+				type = MessageBox.TYPE_ERROR
 			)
 
 
@@ -475,5 +480,6 @@ class OMBManagerPreferences(Screen, ConfigListScreen):
 			if not os.path.isfile(self.data_dir + '/.bootmenu.lock'):
 				cmd = "touch " + self.data_dir + '/.bootmenu.lock'
 				os.system(cmd)
+
 
 		self.close()
